@@ -1,0 +1,5 @@
+# openssl rand -hex 32
+SECRET_KEY = "407c059ed9cd26ea29f795b483b53e60bd161f08b0d46909cd5ad9ee1ef74e14"
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
+
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:root@192.168.1.12:8082/fastapi"
