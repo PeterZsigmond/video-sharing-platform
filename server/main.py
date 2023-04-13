@@ -3,9 +3,7 @@ from server.routers import users
 from fastapi.middleware.cors import CORSMiddleware
 
 
-app = FastAPI(
-    prefix = "/api"
-)
+app = FastAPI()
 
 app.include_router(users.router)
 

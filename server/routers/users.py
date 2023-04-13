@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from server import config
 from server.database import crud
 from server.database.session import SessionLocal
-from server.schemas.user import User
+from server.schemas.user import User, UserCreate
 from server.schemas.token import Token, TokenData
 
 
@@ -83,3 +83,11 @@ def get_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: An
 @router.get("/me", response_model=User)
 def get_authenticated_user(user: Annotated[User, Depends(authenticate_user)]):
     return user
+
+
+@router.post("/create", response_model=User)
+def create_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
+    db_user = crud.get_user_by_username(user.username, db)
+    if db_user:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already registered.")
+    return crud.create_user(user.username, hash_password(user.password), db)
