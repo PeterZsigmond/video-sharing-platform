@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from server import config
-from server.controllers.user import create_user, get_user_by_username, verify_user, authenticate_user, create_jwt_token, hash_password
+from server.controllers.user import create_user, get_user_by_username, verify_user, create_jwt_token, hash_password
 from server.schemas.user import User, UserCreate
 from server.schemas.token import Token
 from server.database.session import get_db_session
@@ -23,11 +23,6 @@ def get_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: An
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password.", headers={"WWW-Authenticate": "Bearer"})
     jwt_token = create_jwt_token(user.username, timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": jwt_token, "token_type": "bearer"}
-
-
-@router.get("/me", response_model=User)
-def get_authenticated_user(user: Annotated[User, Depends(authenticate_user)]):
-    return user
 
 
 @router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)

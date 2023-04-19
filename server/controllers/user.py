@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from server.schemas.token import TokenData
 from server import config
 from server.database.session import get_db_session
+from pydantic import ValidationError
 
 
 def get_user_by_username(username: str, db: Session):
@@ -23,7 +24,6 @@ def create_user(username: str, password: str, db: Session):
     return user
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -51,17 +51,40 @@ def create_jwt_token(sub: str, expires_delta: timedelta):
     return jwt_token
 
 
-def authenticate_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db_session)]):
+def validate_jwt_token(token: str):
     credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials.", headers={"WWW-Authenticate": "Bearer"})
+
     try:
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=["HS256"])
     except JWTError:
         raise credentials_exception
+    
     username = payload.get("sub")
     if username is None:
         raise credentials_exception
-    token_data = TokenData(username=username)
-    user = get_user_by_username(token_data.username, db)
-    if user is None:
+    
+    try:
+        token_data = TokenData(username=username)
+    except ValidationError:
         raise credentials_exception
-    return user
+    
+    return token_data.username
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
+
+
+def authenticate_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db_session)]):
+    username = validate_jwt_token(token)
+    
+    return get_user_by_username(username, db)
+
+
+def authenticate_user_or_none(token: Annotated[str, Depends(oauth2_scheme_optional)], db: Annotated[Session, Depends(get_db_session)]):
+    if token is None:
+        return None
+    
+    username = validate_jwt_token(token)
+
+    return get_user_by_username(username, db)
