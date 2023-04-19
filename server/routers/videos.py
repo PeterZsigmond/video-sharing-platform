@@ -1,10 +1,10 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, UploadFile, Form, HTTPException, status
+from fastapi import APIRouter, Depends, UploadFile, Form, HTTPException, status, Query
 from fastapi.responses import FileResponse
 from server.schemas.user import User
 from server.schemas.video import Video, VideoCreate
 from server.controllers.user import authenticate_user
-from server.controllers.video import create_video, get_video_data, get_video_path
+from server.controllers.video import create_video, get_video_data, get_video_path, get_all_public_videos
 from sqlalchemy.orm import Session
 from server.database.session import get_db_session
 from pydantic import ValidationError
@@ -34,11 +34,20 @@ def upload_video(
     return db_video
 
 
-@router.get("/{video_id}")
-def show_video(video_data: Annotated[Video, Depends(get_video_data)]):
-    return FileResponse(get_video_path(video_data.id))
+@router.get("/browse", response_model=list[Video])
+def browse_public_videos(
+        db: Annotated[Session, Depends(get_db_session)],
+        skip: Annotated[int, Query(ge=0)] = 0,
+        limit: Annotated[int, Query(ge=1, le=50)] = 50
+    ):
+    return get_all_public_videos(skip, limit, db)
 
 
 @router.get("/data/{video_id}", response_model=Video)
 def show_video_data(video_data: Annotated[Video, Depends(get_video_data)]):
     return video_data
+
+
+@router.get("/{video_id}")
+def show_video(video_data: Annotated[Video, Depends(get_video_data)]):
+    return FileResponse(get_video_path(video_data.id))

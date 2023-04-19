@@ -20,6 +20,10 @@ def get_video_by_id(id: int, db: Session):
     return db.query(VideoModel).filter(VideoModel.id == id).first()
 
 
+def get_all_public_videos(skip: int, limit: int, db: Session):
+    return db.query(VideoModel).filter(VideoModel.private == False).offset(skip).limit(limit).all()
+
+
 def get_video_path(id: int):
     return "videos/" + str(id) + ".mp4"
 
