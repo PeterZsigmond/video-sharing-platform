@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from server import config
-from server.database import crud
+from server.controllers.user import create_user, get_user_by_username
 from server.database.session import SessionLocal
 from server.schemas.user import User, UserCreate
 from server.schemas.token import Token, TokenData
@@ -39,7 +39,7 @@ def hash_password(password):
 
 
 def verify_user(username: str, password: str, db: Session):
-    user = crud.get_user_by_username(username, db)
+    user = get_user_by_username(username, db)
     if user is None:
         return None
     if not verify_password(password, user.password):
@@ -64,7 +64,7 @@ def authenticate_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotat
     if username is None:
         raise credentials_exception
     token_data = TokenData(username=username)
-    user = crud.get_user_by_username(token_data.username, db)
+    user = get_user_by_username(token_data.username, db)
     if user is None:
         raise credentials_exception
     return user
@@ -86,7 +86,7 @@ def get_authenticated_user(user: Annotated[User, Depends(authenticate_user)]):
 
 @router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
 def register_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
-    db_user = crud.get_user_by_username(user.username, db)
+    db_user = get_user_by_username(user.username, db)
     if db_user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already registered.")
-    return crud.create_user(user.username, hash_password(user.password), db)
+    return create_user(user.username, hash_password(user.password), db)

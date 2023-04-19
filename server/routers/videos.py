@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, UploadFile, Form, HTTPException, status
 from server.routers.users import authenticate_user
 from server.schemas.user import User
 from server.schemas.video import Video, VideoCreate
-from server.database import crud
+from server.controllers.video import create_video
 from sqlalchemy.orm import Session
 from server.routers.users import get_db
 from pydantic import ValidationError
@@ -27,7 +27,7 @@ def upload_video(
         video_data = VideoCreate(title=title, private=private)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors())
-    db_video = crud.create_video(video_data.title, user.id, video_data.private, db)
+    db_video = create_video(video_data.title, user.id, video_data.private, db)
     with open("videos/" + str(db_video.id) + ".bin", 'wb') as f:
         f.write(video.file.read())
     return db_video
