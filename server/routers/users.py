@@ -5,7 +5,6 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-
 from server import config
 from server.database import crud
 from server.database.session import SessionLocal
@@ -85,8 +84,8 @@ def get_authenticated_user(user: Annotated[User, Depends(authenticate_user)]):
     return user
 
 
-@router.post("/create", response_model=User)
-def create_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
+@router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
+def register_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
     db_user = crud.get_user_by_username(user.username, db)
     if db_user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already registered.")
