@@ -77,7 +77,6 @@ oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="token", auto_error=False
 
 def authenticate_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotated[Session, Depends(get_db_session)]):
     username = validate_jwt_token(token)
-    
     return get_user_by_username(username, db)
 
 
@@ -86,5 +85,4 @@ def authenticate_user_or_none(token: Annotated[str, Depends(oauth2_scheme_option
         return None
     
     username = validate_jwt_token(token)
-
     return get_user_by_username(username, db)
