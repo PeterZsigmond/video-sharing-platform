@@ -11,3 +11,4 @@ class UserModel(Base):
     password: Mapped[str] = mapped_column(String(100))
 
     videos = relationship("VideoModel", back_populates="uploader")
+    playlists = relationship("PlaylistModel", back_populates="creator")

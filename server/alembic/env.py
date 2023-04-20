@@ -18,8 +18,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from database.models.user import UserModel
-from database.models.video import VideoModel
+from models.user import UserModel
+from models.video import VideoModel
+from models.playlist import PlaylistModel
 from database.session import Base
 target_metadata = Base.metadata
 
