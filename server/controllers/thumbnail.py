@@ -1,6 +1,7 @@
 from os import path, remove
 from fastapi import HTTPException, status, UploadFile
 from server.controllers.file import validate_upload_file_type, validate_upload_file_size, write_file
+from server.config import MAX_THUMBNAIL_SIZE_IN_MB
 
 
 valid_image_types = ["image/png", "image/jpeg"]
@@ -20,7 +21,7 @@ def get_thumbnail_path(id: int):
 
 def validate_thumbnail_file(thumbnail: UploadFile):
     validate_upload_file_type(thumbnail, valid_image_types)
-    validate_upload_file_size(thumbnail, 5)
+    validate_upload_file_size(thumbnail, MAX_THUMBNAIL_SIZE_IN_MB)
     return thumbnail
 
 

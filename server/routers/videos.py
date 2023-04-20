@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 from server.schemas.user import User
 from server.schemas.video import Video, VideoCreate
 from server.controllers.user import authenticate_user
-from server.controllers.video import create_video, get_video_data, get_video_path, get_all_public_videos, validate_video_exists, validate_video_owner
+from server.controllers.video import create_video, get_video_data, get_video_path, get_all_public_videos, validate_video_exists, validate_video_owner, validate_video_file
 from server.controllers.thumbnail import validate_thumbnail_file, write_thumbnail_file, delete_thumbnail, get_thumbnail_path
 from sqlalchemy.orm import Session
 from server.database.session import get_db_session
@@ -21,7 +21,7 @@ router = APIRouter(
 def upload_video(
         title: Annotated[str, Form()],
         private: Annotated[bool, Form()],
-        video: UploadFile,
+        video: Annotated[UploadFile, Depends(validate_video_file)],
         user: Annotated[User, Depends(authenticate_user)],
         db: Annotated[Session, Depends(get_db_session)]
     ):

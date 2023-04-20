@@ -6,9 +6,9 @@ def validate_upload_file_type(file: UploadFile, valid_types: list[str]):
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail={"Allowed content types:": valid_types})
 
 
-def validate_upload_file_size(file: UploadFile, mb: int):
-    if file.size is None or file.size == 0 or file.size > (mb * 1024 * 1024):
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Allowed maximum file size: " + str(mb) + "MB.")
+def validate_upload_file_size(file: UploadFile, max_mb: int):
+    if file.size is None or file.size == 0 or file.size > (max_mb * 1024 * 1024):
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Allowed maximum file size: " + str(max_mb) + "MB.")
 
 
 def write_file(file: UploadFile, file_path: str):

@@ -5,7 +5,16 @@ from server.models.video import VideoModel
 from server.schemas.user import User
 from server.database.session import get_db_session
 from server.controllers.user import authenticate_user_or_none
-from fastapi import HTTPException, Depends, status
+from server.controllers.file import validate_upload_file_type, validate_upload_file_size
+from server.config import MAX_VIDEO_SIZE_IN_MB
+from fastapi import HTTPException, Depends, status, UploadFile
+
+
+valid_video_types = ["video/mp4"]
+
+
+def get_video_path(id: int):
+    return "videos/" + str(id) + ".mp4"
 
 
 def create_video(title: str, uploader_id: int, private: bool, db: Session):
@@ -22,10 +31,6 @@ def get_video_by_id(id: int, db: Session):
 
 def get_all_public_videos(skip: int, limit: int, db: Session):
     return db.query(VideoModel).filter(VideoModel.private == False).offset(skip).limit(limit).all()
-
-
-def get_video_path(id: int):
-    return "videos/" + str(id) + ".mp4"
 
 
 def validate_video_exists(id: int, db: Session):
@@ -54,3 +59,9 @@ def get_video_data(
     video_data = validate_video_exists(video_id, db)
     validate_video_can_be_viewed_by_user(video_data, user)
     return video_data
+
+
+def validate_video_file(video: UploadFile):
+    validate_upload_file_type(video, valid_video_types)
+    validate_upload_file_size(video, MAX_VIDEO_SIZE_IN_MB)
+    return video
