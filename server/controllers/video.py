@@ -3,18 +3,24 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from server.models.video import VideoModel
 from server.schemas.user import User
+from server.schemas.video import VideoCreate
 from server.database.session import get_db_session
 from server.controllers.user import authenticate_user_or_none
-from server.controllers.file import validate_upload_file_type, validate_upload_file_size
+from server.controllers.file import validate_upload_file_type, validate_upload_file_size, write_file
 from server.config import MAX_VIDEO_SIZE_IN_MB
 from fastapi import HTTPException, Depends, status, UploadFile
+from pydantic import ValidationError
 
 
 valid_video_types = ["video/mp4"]
 
 
-def get_video_path(id: int):
-    return "videos/" + str(id) + ".mp4"
+def get_video_dir():
+    return "videos/"
+
+
+def video_file_path(id: int):
+    return get_video_dir() + str(id) + ".mp4"
 
 
 def create_video(title: str, uploader_id: int, private: bool, db: Session):
@@ -65,3 +71,16 @@ def validate_video_file(video: UploadFile):
     validate_upload_file_type(video, valid_video_types)
     validate_upload_file_size(video, MAX_VIDEO_SIZE_IN_MB)
     return video
+
+
+def validate_video_create_data(title: str, private: bool):
+    try:
+        video_data = VideoCreate(title=title, private=private)
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors())
+    return video_data
+
+
+def write_video_file(video: UploadFile, id: int):
+    file_path = video_file_path(id)
+    write_file(video, file_path)

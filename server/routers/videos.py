@@ -1,14 +1,13 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, UploadFile, Form, HTTPException, status, Query
+from fastapi import APIRouter, Depends, UploadFile, Form, status, Query
 from fastapi.responses import FileResponse
 from server.schemas.user import User
-from server.schemas.video import Video, VideoCreate
+from server.schemas.video import Video
 from server.controllers.user import authenticate_user
-from server.controllers.video import create_video, get_video_data, get_video_path, get_all_public_videos, validate_video_exists, validate_video_owner, validate_video_file
+from server.controllers.video import create_video, get_video_data, get_all_public_videos, validate_video_exists, validate_video_owner, validate_video_file, validate_video_create_data, write_video_file, video_file_path
 from server.controllers.thumbnail import validate_thumbnail_file, write_thumbnail_file, delete_thumbnail, get_thumbnail_path
 from sqlalchemy.orm import Session
 from server.database.session import get_db_session
-from pydantic import ValidationError
 
 
 router = APIRouter(
@@ -25,13 +24,9 @@ def upload_video(
         user: Annotated[User, Depends(authenticate_user)],
         db: Annotated[Session, Depends(get_db_session)]
     ):
-    try:
-        video_data = VideoCreate(title=title, private=private)
-    except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors())
+    video_data = validate_video_create_data(title, private)
     db_video = create_video(video_data.title, user.id, video_data.private, db)
-    with open(get_video_path(db_video.id), 'wb') as f:
-        f.write(video.file.read())
+    write_video_file(video, db_video.id)
     return db_video
 
 
@@ -71,4 +66,4 @@ def show_video_data(video_data: Annotated[Video, Depends(get_video_data)]):
 
 @router.get("/{video_id}")
 def show_video(video_data: Annotated[Video, Depends(get_video_data)]):
-    return FileResponse(get_video_path(video_data.id))
+    return FileResponse(video_file_path(video_data.id))
