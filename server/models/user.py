@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String
 from server.database.session import Base
+from server.models.video import VideoModel
+from server.models.playlist import PlaylistModel
 
 
 class UserModel(Base):
