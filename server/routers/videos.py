@@ -5,7 +5,7 @@ from server.schemas.user import User
 from server.schemas.video import Video, VideoCreate
 from server.controllers.user import authenticate_user
 from server.controllers.video import create_video, get_video_data, get_video_path, get_all_public_videos, validate_video_exists, validate_video_owner
-from server.controllers.thumbnail import get_thumbnail_path, validate_thumbnail_exists
+from server.controllers.thumbnail import validate_thumbnail_file, write_thumbnail_file, delete_thumbnail, get_thumbnail_path
 from sqlalchemy.orm import Session
 from server.database.session import get_db_session
 from pydantic import ValidationError
@@ -47,21 +47,20 @@ def browse_public_videos(
 @router.post("/upload-thumbnail", status_code=status.HTTP_201_CREATED)
 def upload_thumbnail(
         video_id: Annotated[int, Form()],
-        thumbnail: UploadFile,
+        thumbnail: Annotated[UploadFile, Depends(validate_thumbnail_file)],
         user: Annotated[User, Depends(authenticate_user)],
         db: Annotated[Session, Depends(get_db_session)]
     ):
     video_data = validate_video_exists(video_id, db)
     validate_video_owner(video_data, user)
-    with open(get_thumbnail_path(video_data.id), 'wb') as f:
-        f.write(thumbnail.file.read())
+    delete_thumbnail(video_data.id)
+    write_thumbnail_file(thumbnail, video_data.id)    
     return {"detail": "Successfully uploaded thumbnail."}
 
 
 @router.get("/thumbnail/{video_id}")
 def get_thumbnail(video_data: Annotated[Video, Depends(get_video_data)]):
     thumbnail_path = get_thumbnail_path(video_data.id)
-    validate_thumbnail_exists(thumbnail_path)
     return FileResponse(thumbnail_path)
 
 
