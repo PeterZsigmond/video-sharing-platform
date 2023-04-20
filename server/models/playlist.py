@@ -1,6 +1,15 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, Integer, ForeignKey
+from sqlalchemy import String, Boolean, Integer, ForeignKey, Table, Column
 from server.database.session import Base
+from server.models.video import VideoModel
+
+
+playlists_videos = Table(
+    "playlists_videos",
+    Base.metadata,
+    Column("playlist_id", ForeignKey("playlists.id"), primary_key=True),
+    Column("video_id", ForeignKey("videos.id"), primary_key=True)
+)
 
 
 class PlaylistModel(Base):
@@ -12,3 +21,4 @@ class PlaylistModel(Base):
     creator_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
 
     creator = relationship("UserModel", back_populates="playlists")
+    videos: Mapped[list[VideoModel]] = relationship(secondary=playlists_videos)
