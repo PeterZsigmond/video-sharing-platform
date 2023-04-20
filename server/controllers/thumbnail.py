@@ -12,8 +12,7 @@ def get_thumbnail_dir():
 
 def get_thumbnail_path(id: int):
     for content_type in valid_image_types:
-        file_type = content_type.split("/")[1]
-        file_path = get_thumbnail_dir() + str(id) + "." + file_type
+        file_path = thumbnail_file_path(id, content_type)
         if path.isfile(file_path):
             return file_path
     raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
@@ -27,13 +26,17 @@ def validate_thumbnail_file(thumbnail: UploadFile):
 
 def delete_thumbnail(id: int):
     for content_type in valid_image_types:
-        file_type = content_type.split("/")[1]
-        file_path = get_thumbnail_dir() + str(id) + "." + file_type
+        file_path = thumbnail_file_path(id, content_type)
         if path.isfile(file_path):
             remove(file_path)
 
 
 def write_thumbnail_file(thumbnail: UploadFile, id: int):
-    file_type = str(thumbnail.content_type).split("/")[1]
-    file_path = get_thumbnail_dir() + str(id) + "." + file_type
+    file_path = thumbnail_file_path(id, str(thumbnail.content_type))
     write_file(thumbnail, file_path)
+
+
+def thumbnail_file_path(id: int, content_type: str):
+    file_type = content_type.split("/")[1]
+    file_path = get_thumbnail_dir() + str(id) + "." + file_type
+    return file_path
